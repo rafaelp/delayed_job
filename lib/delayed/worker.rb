@@ -3,6 +3,7 @@ require 'active_support/core_ext/numeric/time'
 require 'active_support/core_ext/class/attribute_accessors'
 require 'active_support/core_ext/kernel'
 require 'logger'
+require 'rush'
 
 module Delayed
   class Worker
@@ -78,6 +79,8 @@ module Delayed
         end
 
         count = result.sum
+
+        Manager.scale_down if count.zero? && Job.auto_scale && Job.count == 0
 
         break if $exit
 

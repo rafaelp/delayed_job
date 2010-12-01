@@ -6,6 +6,17 @@ module Delayed
       # A job object that is persisted to the database.
       # Contains the work object as a YAML field.
       class Job < ::ActiveRecord::Base
+
+        # enable auto_scale if you want DJ to spin a worker when there's a
+        # new job to be done, and kill it when there's nothing else to do
+        cattr_accessor :auto_scale
+        self.auto_scale = false
+
+        # the auto_scale_manager is the class that knows how to scale workers
+        # up and down
+        cattr_accessor :auto_scale_manager
+        self.auto_scale_manager = :local
+
         include Delayed::Backend::Base
         set_table_name :delayed_jobs
 
@@ -19,6 +30,10 @@ module Delayed
         scope :locked_by_worker, lambda{|worker_name, max_run_time|
           where(['locked_by = ? AND locked_at > ?', worker_name, db_time_now - max_run_time])
         }
+
+        def after_create
+          Manager.scale_up if self.class.auto_scale && Manager.qty == 0
+        end
 
         def self.before_fork
           ::ActiveRecord::Base.clear_all_connections!

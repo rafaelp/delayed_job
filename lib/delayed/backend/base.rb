@@ -6,6 +6,7 @@ module Delayed
       end
 
       module ClassMethods
+
         # Add a job to the queue
         def enqueue(*args)
           options = {
