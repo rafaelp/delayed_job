@@ -1,3 +1,5 @@
+require 'rush'
+
 module Delayed
   module Manager
     class Local
