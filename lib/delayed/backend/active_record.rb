@@ -30,8 +30,10 @@ module Delayed
         scope :locked_by_worker, lambda{|worker_name, max_run_time|
           where(['locked_by = ? AND locked_at > ?', worker_name, db_time_now - max_run_time])
         }
+        
+        after_create :scale_up
 
-        def after_create
+        def scale_up
           Manager.scale_up if self.class.auto_scale && Manager.qty == 0
         end
 
